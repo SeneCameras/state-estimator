@@ -29,7 +29,7 @@ class Ukf(localization.filters.base.FilterBase):
         self._sigma_points = [
                 numpy.zeros([state_size, 1]) for _ in xrange(sigma_count)]
 
-        self._lambda = alpha * alpha * (state_size + kappa) - state_size;
+        self._lambda = alpha * alpha * (state_size + kappa) - state_size
 
         weight = 1. / (2. * (state_size + self._lambda))
         self._state_weights = [weight] * sigma_count
