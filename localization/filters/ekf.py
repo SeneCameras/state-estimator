@@ -64,7 +64,7 @@ class Ekf(localization.filters.base.FilterBase):
                 innovation_subset, hphr_inv, measurement.mahalanobis_threshold):
             for idx, iui in enumerate(update_indices):
                 state_to_measurement_subset[idx, iui] = 1.0
-                if iui >= StateMember.roll or iui <= StateMember.yaw:
+                if iui >= StateMember.roll and iui <= StateMember.yaw:
                     innovation_subset[idx] = (
                             localization.filters.base.clampRotation(
                                     innovation_subset[idx]))
