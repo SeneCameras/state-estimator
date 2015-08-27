@@ -62,6 +62,30 @@ class TestFilterBase(unittest.TestCase):
 
         self.assertEqual(1002., derived.last_measurement_time)
 
+    def test_enqueue_and_integrate_measurements(self):
+        derived = FilterDerived(self)
+
+        measurement = numpy.array([[0.1 * i] for i in xrange(15)])
+        measurement_covariance = numpy.array(
+                [[0.1 * i * j for j in xrange(15)] for i in xrange(15)])
+
+        derived.enqueueMeasurement(localization.filters.base.Measurement(
+                1002., measurement * 2.0, measurement_covariance, [True] * 15))
+        derived.enqueueMeasurement(localization.filters.base.Measurement(
+                1005., measurement * 3.0, measurement_covariance, [True] * 15))
+        derived.enqueueMeasurement(localization.filters.base.Measurement(
+                1000., measurement * 4.0, measurement_covariance, [True] * 15))
+
+        self.assertFalse(derived.isInitialized())
+
+        derived.integrateMeasurements()
+
+        self.assertTrue(derived.isInitialized())
+        self.assertSequenceEqual((15, 1), measurement.shape)
+        self.assertSequenceEqual(measurement.shape, derived.state.shape)
+        self.assertSequenceEqual(measurement[0] * 3., derived.state[0])
+        self.assertEqual(1005., derived.last_measurement_time)
+
 
 if __name__ == '__main__':
     unittest.main()

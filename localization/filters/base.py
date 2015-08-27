@@ -1,5 +1,6 @@
 import math
 import numpy
+import Queue
 
 
 class StateMember:
@@ -38,9 +39,9 @@ class Measurement(object):
         self.time = time
         self.mahalanobis_threshold = float('inf')
 
-    """Override of greater-than operator for sorting purposes"""
-    def __gt__(self, other):
-        return self.time > other.time
+    """Override of comparison operator for sorting purposes"""
+    def __cmp__(self, other):
+        return cmp(self.time, other.time)
 
 
 class FilterBase(object):
@@ -63,6 +64,8 @@ class FilterBase(object):
         self.sensor_timeout = 0.001 # Assume 100 Hz sensor data
         self.last_update_time = 0
         self.last_measurement_time = 0
+
+        self._measurement_queue = Queue.PriorityQueue()
 
     def correct(self, measurement):
         raise NotImplementedError("Please Implement this method")
@@ -107,3 +110,10 @@ class FilterBase(object):
         squared_mahalanobis = innovation.T.dot(inv_covariance).dot(innovation)
         threshold = nsigmas * nsigmas
         return squared_mahalanobis < threshold
+
+    def enqueueMeasurement(self, measurement):
+        self._measurement_queue.put(measurement)
+
+    def integrateMeasurements(self):
+        while not self._measurement_queue.empty():
+            self.processMeasurement(self._measurement_queue.get())
