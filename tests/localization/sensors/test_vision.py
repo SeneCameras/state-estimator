@@ -5,7 +5,7 @@ import localization.sensors.vision
 import localization.util
 
 
-class TestSensorBase(unittest.TestCase):
+class TestVision(unittest.TestCase):
     def test_constructor(self):
         # Set a zero covariance matrix to make tests deterministic
         vision = localization.sensors.vision.Vision(
