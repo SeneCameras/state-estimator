@@ -2,6 +2,7 @@ import numpy
 import unittest
 
 import localization.filters.ukf
+import localization.util
 
 
 class TestUkf(unittest.TestCase):
@@ -12,7 +13,7 @@ class TestUkf(unittest.TestCase):
         measurement = numpy.array([[0.15 * i] for i in xrange(15)])
         measurement_covariance = numpy.identity(15) * 1e-9
         update_vector = [True] * 15
-        meas = localization.filters.base.Measurement(
+        meas = localization.util.Measurement(
                 1000., measurement, measurement_covariance, update_vector)
         ekf.processMeasurement(meas)
 
@@ -23,7 +24,7 @@ class TestUkf(unittest.TestCase):
         ekf.estimate_error_covariance = initial_covariance.copy()
 
         measurement *= 2.
-        meas = localization.filters.base.Measurement(
+        meas = localization.util.Measurement(
                 1002., measurement, measurement_covariance, update_vector)
         self.assertSequenceEqual((15, 1), measurement.shape)
         self.assertSequenceEqual(measurement.shape, ekf.state.shape)

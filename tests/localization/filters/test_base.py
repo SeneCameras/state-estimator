@@ -2,6 +2,7 @@ import numpy
 import unittest
 
 import localization.filters.base
+import localization.util
 
 
 class FilterDerived(localization.filters.base.FilterBase):
@@ -22,18 +23,6 @@ class FilterDerived(localization.filters.base.FilterBase):
 
 
 class TestFilterBase(unittest.TestCase):
-    def test_measurement_struct(self):
-        meas1 = localization.filters.base.Measurement(0., None, None, None)
-        meas2 = localization.filters.base.Measurement(0., None, None, None)
-        self.assertEqual(0., meas1.time)
-        self.assertEqual(0., meas2.time)
-        self.assertFalse(meas1 > meas2)
-        self.assertFalse(meas2 > meas1)
-        meas1.time = 100
-        meas2.time = 200
-        self.assertFalse(meas1 > meas2)
-        self.assertTrue(meas2 > meas1)
-
     def test_derived_filter_get_set(self):
         derived = FilterDerived(self)
         self.assertFalse(derived.isInitialized())
@@ -45,7 +34,7 @@ class TestFilterBase(unittest.TestCase):
         measurement_covariance = numpy.array(
                 [[0.1 * i * j for j in xrange(15)] for i in xrange(15)])
 
-        meas = localization.filters.base.Measurement(
+        meas = localization.util.Measurement(
                 1000., measurement, measurement_covariance, [True] * 15)
 
         self.assertFalse(derived.isInitialized())
@@ -69,11 +58,11 @@ class TestFilterBase(unittest.TestCase):
         measurement_covariance = numpy.array(
                 [[0.1 * i * j for j in xrange(15)] for i in xrange(15)])
 
-        derived.enqueueMeasurement(localization.filters.base.Measurement(
+        derived.enqueueMeasurement(localization.util.Measurement(
                 1002., measurement * 2.0, measurement_covariance, [True] * 15))
-        derived.enqueueMeasurement(localization.filters.base.Measurement(
+        derived.enqueueMeasurement(localization.util.Measurement(
                 1005., measurement * 3.0, measurement_covariance, [True] * 15))
-        derived.enqueueMeasurement(localization.filters.base.Measurement(
+        derived.enqueueMeasurement(localization.util.Measurement(
                 1000., measurement * 4.0, measurement_covariance, [True] * 15))
 
         self.assertFalse(derived.isInitialized())

@@ -2,7 +2,7 @@ import math
 import numpy
 
 import localization.filters.base
-from localization.filters.base import StateMember
+from localization.util import clampRotation, StateMember
 
 
 def sinCosToRotationMatrix(cr, cp, cy, sr, sp, sy):
@@ -138,9 +138,8 @@ class Ukf(localization.filters.base.FilterBase):
             for idx, iui in enumerate(update_indices):
                 state_to_measurement_subset[idx, iui] = 1.0
                 if iui >= StateMember.roll and iui <= StateMember.yaw:
-                    innovation_subset[idx] = (
-                            localization.filters.base.clampRotation(
-                                    innovation_subset[idx]))
+                    innovation_subset[idx] = clampRotation(
+                            innovation_subset[idx])
             self.state = kalman_gain_subset.dot(innovation_subset)
 
             self.estimate_error_covariance -= kalman_gain_subset.dot(
