@@ -22,13 +22,14 @@ class Ukf(localization.filters.base.FilterBase):
         self._sigma_points = [
                 numpy.zeros([state_size, 1]) for _ in xrange(sigma_count)]
 
-        self._lambda = alpha * alpha * (state_size + kappa) - state_size
+        self._lambda_adj = alpha * alpha * (state_size + kappa)
+        self._lambda = self._lambda_adj - state_size
 
-        weight = 1. / (2. * (state_size + self._lambda))
+        weight = 0.5 / self._lambda_adj
         self._state_weights = [weight] * sigma_count
         self._covar_weights = [weight] * sigma_count
 
-        self._state_weights[0] = self._lambda / (state_size + self._lambda)
+        self._state_weights[0] = self._lambda / self._lambda_adj
         self._covar_weights[0] = self._state_weights[0] + (
                 1. - (alpha * alpha) + beta)
 
@@ -36,7 +37,7 @@ class Ukf(localization.filters.base.FilterBase):
         state_size = self.state.shape[0]
 
         self._weighted_covar_sqrt = numpy.linalg.cholesky(
-                (state_size + self._lambda) * self.estimate_error_covariance)
+                self._lambda_adj * self.estimate_error_covariance)
 
         self._sigma_points[0] = self.state.copy()
 
@@ -50,7 +51,7 @@ class Ukf(localization.filters.base.FilterBase):
         state_size = self.state.shape[0]
 
         self._weighted_covar_sqrt = numpy.linalg.cholesky(
-                (state_size + self._lambda) * self.estimate_error_covariance)
+                self._lambda_adj * self.estimate_error_covariance)
 
         self._sigma_points[0] = self._transfer_function.dot(self.state)
 
@@ -178,7 +179,7 @@ class Ukf(localization.filters.base.FilterBase):
         self._uncorrected = True
 
         self.estimate_error_covariance.fill(0.)
-        for weight, point in zip(self._state_weights, self._sigma_points):
+        for weight, point in zip(self._covar_weights, self._sigma_points):
             sigma_diff = point - self.state
             self.estimate_error_covariance += sigma_diff.dot(
                     sigma_diff.T) * weight
