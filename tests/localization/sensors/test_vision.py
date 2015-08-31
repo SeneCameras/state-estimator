@@ -23,10 +23,10 @@ class TestVision(unittest.TestCase):
         meas = vision.getStateMeasurementsUntil(
                 numpy.arange(15.).reshape([15, 1]), 10.3)
         self.assertIsNotNone(meas)
-        self.assertSequenceEqual([3, 1], meas.measurement.shape)
-        self.assertAlmostEqual(6., meas.measurement[0, 0])
-        self.assertAlmostEqual(7., meas.measurement[1, 0])
-        self.assertAlmostEqual(8., meas.measurement[2, 0])
+        self.assertSequenceEqual([15, 1], meas.measurement.shape)
+        self.assertAlmostEqual(6., meas.measurement[6, 0])
+        self.assertAlmostEqual(7., meas.measurement[7, 0])
+        self.assertAlmostEqual(8., meas.measurement[8, 0])
         self.assertAlmostEqual(12., vision.next_measurement_time)
 
         meas = vision.getStateMeasurementsUntil(
@@ -37,10 +37,10 @@ class TestVision(unittest.TestCase):
         meas = vision.getStateMeasurementsUntil(
                 numpy.arange(4., 19.).reshape([15, 1]), 12.2)
         self.assertIsNotNone(meas)
-        self.assertSequenceEqual([3, 1], meas.measurement.shape)
-        self.assertAlmostEqual(10., meas.measurement[0, 0])
-        self.assertAlmostEqual(11., meas.measurement[1, 0])
-        self.assertAlmostEqual(12., meas.measurement[2, 0])
+        self.assertSequenceEqual([15, 1], meas.measurement.shape)
+        self.assertAlmostEqual(10., meas.measurement[6, 0])
+        self.assertAlmostEqual(11., meas.measurement[7, 0])
+        self.assertAlmostEqual(12., meas.measurement[8, 0])
         self.assertAlmostEqual(14., vision.next_measurement_time)
 
 

@@ -11,12 +11,14 @@ class Vision(localization.sensors.base.SensorBase):
     frequency and covariance.
     """
     def __init__(self, start_time, frequency, covariance):
+        covar = numpy.zeros([15, 15])
+        covar[6:9, 6:9] = covariance
         super(Vision, self).__init__(
-                start_time, 1. / frequency, covariance,
+                start_time, 1. / frequency, covar,
                 [StateMember.v_x, StateMember.v_y, StateMember.v_z])
 
     def generateMeasurement(self, real_state):
-        meas = [real_state[i, 0] for i in self.measured_values]
+        meas = numpy.asarray(real_state).reshape(15)
         meas = numpy.random.multivariate_normal(meas, self.covariance)
-        meas = numpy.asarray(meas).reshape([len(self.measured_values), 1])
+        meas = numpy.asarray(meas).reshape([15, 1])
         return Measurement(0., meas, self.covariance, self.update_vector)
