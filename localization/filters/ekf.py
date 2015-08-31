@@ -2,14 +2,7 @@ import math
 import numpy
 
 import localization.filters.base
-from localization.util import clampRotation, StateMember
-
-
-def sinCosToRotationMatrix(cr, cp, cy, sr, sp, sy):
-    return numpy.array([
-            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
-            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
-            [-sp, cp * sr, cp * cr]])
+from localization.util import clampRotation, StateMember, sinCosToRotationMatrix
 
 
 class Ekf(localization.filters.base.FilterBase):
