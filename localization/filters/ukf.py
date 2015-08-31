@@ -129,11 +129,10 @@ class Ukf(localization.filters.base.FilterBase):
                 innovation_subset, inv_innov_cov,
                 measurement.mahalanobis_threshold):
             for idx, iui in enumerate(update_indices):
-                state_to_measurement_subset[idx, iui] = 1.0
                 if iui >= StateMember.roll and iui <= StateMember.yaw:
                     innovation_subset[idx] = clampRotation(
                             innovation_subset[idx])
-            self.state = kalman_gain_subset.dot(innovation_subset)
+            self.state += kalman_gain_subset.dot(innovation_subset)
 
             self.estimate_error_covariance -= kalman_gain_subset.dot(
                     predicted_meas_covar).dot(
