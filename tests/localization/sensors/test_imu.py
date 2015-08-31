@@ -18,7 +18,7 @@ class TestImu(unittest.TestCase):
         self.assertAlmostEqual(10., imu.next_measurement_time)
 
         desired_covariance = numpy.diag(
-                [0.] * 9 + [8.726646259971648e-05] * 3 + [1.4709975] * 3)
+                [0.] * 9 + [8.726646259971648e-05] * 3 + [1.4709975e-3] * 3)
         self.assertSequenceEqual([15, 15], imu.covariance.shape)
         for i in xrange(15):
             for j in xrange(15):

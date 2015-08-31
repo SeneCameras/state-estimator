@@ -13,7 +13,7 @@ class InvensenseMPU9250(localization.sensors.base.SensorBase):
         deg_to_rad = math.pi / 180.
         # Based on datasheet:
         npsd_gyro = 0.01 * deg_to_rad
-        npsd_accel = 0.3 * g
+        npsd_accel = 300e-6 * g
 
         covariance = numpy.diag(
                 [0.] * 9 + [npsd_gyro] * 3 + [npsd_accel] * 3) * frequency
