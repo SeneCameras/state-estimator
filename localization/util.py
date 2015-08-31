@@ -1,4 +1,5 @@
 import math
+import numpy
 
 class StateMember:
     x = 0
