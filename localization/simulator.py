@@ -63,10 +63,12 @@ class Simulator(object):
         return {
             'position': self.p.copy(),
             'rpy': self.phi.copy(),
+            'velocity': self.v.copy(),
         }
 
     def getFrameEstimate(self):
         return {
             'position': self.filtering.state[0:3, 0:1],
             'rpy': self.filtering.state[3:6, 0:1],
+            'velocity': self.filtering.state[6:9, 0:1],
         }
