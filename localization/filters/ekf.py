@@ -108,17 +108,6 @@ class Ekf(localization.filters.base.FilterBase):
 
         self._transfer_function_jacobian = self._transfer_function.copy();
 
-        # self._transfer_function_jacobian[StateMember.x:StateMember.z+1,
-        #                                  StateMember.roll:StateMember.yaw+1] = [
-        #         [dF0dr, dF0dp, dF0dy],
-        #         [dF1dr, dF1dp, dF1dy],
-        #         [dF2dr, dF2dp, dF2dy]]
-        # self._transfer_function_jacobian[StateMember.roll:StateMember.yaw+1,
-        #                                  StateMember.roll:StateMember.yaw+1] = [
-        #         [dF6dr, dF6dp, dF6dy],
-        #         [dF7dr, dF7dp, dF7dy],
-        #         [dF8dr, dF8dp, dF8dy]]
-
         self._transfer_function_jacobian[
                 StateMember.x:StateMember.z+1,
                 StateMember.roll:StateMember.roll+1] += r_dr.dot(linear_mult)
