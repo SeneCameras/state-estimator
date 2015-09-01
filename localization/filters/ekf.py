@@ -102,7 +102,7 @@ class Ekf(localization.filters.base.FilterBase):
         c_z = -cy * sp * sr + sy * cr
         dF0dr = ((c_y * v_y + c_z * v_z) * delta +
                  (c_y * a_y + c_z * a_z) * i_delta)
-        dF6dr = 1. + (c_y * v_roll + c_z * v_yaw) * delta
+        dF6dr = 1. + (c_y * v_pitch + c_z * v_yaw) * delta
 
         c_x = -cy * sp
         c_y = cy * cp * sr
@@ -151,11 +151,11 @@ class Ekf(localization.filters.base.FilterBase):
                  (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
         dF8dp = (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
 
+        dF2dy = 0.
+        dF8dy = 1.
+
         self._transfer_function_jacobian = self._transfer_function.copy();
-        dF2dy = self._transfer_function_jacobian[
-                StateMember.z, StateMember.roll]
-        dF8dy = self._transfer_function_jacobian[
-                StateMember.z, StateMember.roll]
+
         self._transfer_function_jacobian[StateMember.x:StateMember.z+1,
                                          StateMember.roll:StateMember.yaw+1] = [
                 [dF0dr, dF0dp, dF0dy],
