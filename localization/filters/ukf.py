@@ -108,13 +108,13 @@ class Ukf(localization.filters.base.FilterBase):
         for idx, iui in enumerate(update_indices):
             state_to_measurement_subset[idx, iui] = 1.0
 
-        for idx in xrange(len(update_indices)):
+        for idx in xrange(len(self._sigma_points)):
             sigma_point_measurements[idx] = state_to_measurement_subset.dot(
                     self._sigma_points[idx])
             predicted_measurement += (
                     self._state_weights[idx] * sigma_point_measurements[idx])
 
-        for idx in xrange(len(update_indices)):
+        for idx in xrange(len(self._sigma_points)):
             sigma_diff = sigma_point_measurements[idx] - predicted_measurement
             predicted_meas_covar += self._covar_weights[idx] * (
                     sigma_diff.dot(sigma_diff.T))
