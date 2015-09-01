@@ -2,7 +2,7 @@ import math
 import numpy
 
 import localization.filters.base
-from localization.util import clampRotation, StateMember, sinCosToRotationMatrix
+from localization.util import clampRotation, StateMember, rpyToRotationMatrix
 
 
 class Ukf(localization.filters.base.FilterBase):
@@ -144,18 +144,11 @@ class Ukf(localization.filters.base.FilterBase):
             self._uncorrected = False
 
     def predict(self, delta):
-        (x, y, z, roll, pitch, yaw, v_x, v_y, v_z, v_roll, v_pitch, v_yaw,
-            a_x, a_y, a_z) = self.state
-
-        cr = math.cos(roll)
-        cp = math.cos(pitch)
-        cy = math.cos(yaw)
-        sr = math.sin(roll)
-        sp = math.sin(pitch)
-        sy = math.sin(yaw)
+        orientation = self.state[StateMember.roll:StateMember.yaw+1]
+        roll, pitch, yaw = orientation.reshape(3)
 
         i_delta = delta * delta * 0.5
-        rot = sinCosToRotationMatrix(cr, cp, cy, sr, sp, sy)
+        rot = rpyToRotationMatrix(roll, pitch, yaw)
         rot_i = rot * delta
         rot_ii = rot * i_delta
 

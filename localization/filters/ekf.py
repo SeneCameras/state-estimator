@@ -2,7 +2,8 @@ import math
 import numpy
 
 import localization.filters.base
-from localization.util import clampRotation, StateMember, sinCosToRotationMatrix
+from localization.util import clampRotation, StateMember
+from localization.util import rpyToRotationMatrixAndDerivatives
 
 
 class Ekf(localization.filters.base.FilterBase):
@@ -72,8 +73,12 @@ class Ekf(localization.filters.base.FilterBase):
                     StateMember.roll, StateMember.pitch, StateMember.yaw)
 
     def predict(self, delta):
-        (x, y, z, roll, pitch, yaw, v_x, v_y, v_z, v_roll, v_pitch, v_yaw,
-            a_x, a_y, a_z) = self.state
+        orientation = self.state[StateMember.roll:StateMember.yaw+1]
+        roll, pitch, yaw = orientation.reshape(3)
+
+        vel = self.state[StateMember.v_x:StateMember.v_z+1]
+        accel = self.state[StateMember.a_x:StateMember.a_z+1]
+        angular_vel = self.state[StateMember.v_roll:StateMember.v_yaw+1]
 
         cr = math.cos(roll)
         cp = math.cos(pitch)
@@ -83,7 +88,8 @@ class Ekf(localization.filters.base.FilterBase):
         sy = math.sin(yaw)
 
         i_delta = delta * delta * 0.5
-        rot = sinCosToRotationMatrix(cr, cp, cy, sr, sp, sy)
+        rot, r_dr, r_dp, r_dy = rpyToRotationMatrixAndDerivatives(
+                roll, pitch, yaw)
         rot_i = rot * delta
         rot_ii = rot * i_delta
 
@@ -97,75 +103,41 @@ class Ekf(localization.filters.base.FilterBase):
         self._transfer_function[StateMember.v_y, StateMember.a_y] = delta
         self._transfer_function[StateMember.v_z, StateMember.a_z] = delta
 
-        c_x = 0.
-        c_y = cy * sp * cr + sy * sr
-        c_z = -cy * sp * sr + sy * cr
-        dF0dr = ((c_y * v_y + c_z * v_z) * delta +
-                 (c_y * a_y + c_z * a_z) * i_delta)
-        dF6dr = 1. + (c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_x = -cy * sp
-        c_y = cy * cp * sr
-        c_z = cy * cp * cr
-        dF0dp = ((c_x * v_x + c_y * v_y + c_z * v_z) * delta +
-                 (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
-        dF6dp = (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_x = -sy * cp
-        c_y = -sy * sp * sr - cy * cr
-        c_z = -sy * sp * cr + cy * sr
-        dF0dy = ((c_x * v_x + c_y * v_y + c_z * v_z) * delta +
-                 (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
-        dF6dy = (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_y = sy * sp * cr - cy * sr
-        c_z = -sy * sp * sr - cy * cr
-        dF1dr = ((c_y * v_y + c_z * v_z) * delta +
-                 (c_y * a_y + c_z * a_z) * i_delta)
-        dF7dr = (c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_x = -sy * sp
-        c_y = sy * cp * sr
-        c_z = sy * cp * cr
-        dF1dp = ((c_x * v_x + c_y * v_y + c_z * v_z) * delta +
-                 (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
-        dF7dp = 1. + (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_x = cy * cp
-        c_y = cy * sp * sr - sy * cr
-        c_z = cy * sp * cr + sy * sr
-        dF1dy = ((c_x * v_x + c_y * v_y + c_z * v_z) * delta +
-                 (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
-        dF7dy = (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_y = cp * cr
-        c_z = -cp * sr
-        dF2dr = ((c_y * v_y + c_z * v_z) * delta +
-                 (c_y * a_y + c_z * a_z) * i_delta)
-        dF8dr = (c_y * v_pitch + c_z * v_yaw) * delta
-
-        c_x = -cp
-        c_y = -sp * sr
-        c_z = -sp * cr
-        dF2dp = ((c_x * v_x + c_y * v_y + c_z * v_z) * delta +
-                 (c_x * a_x + c_y * a_y + c_z * a_z) * i_delta)
-        dF8dp = (c_x * v_roll + c_y * v_pitch + c_z * v_yaw) * delta
-
-        dF2dy = 0.
-        dF8dy = 1.
+        linear_mult = vel * delta + accel * i_delta
+        angular_mult = angular_vel * delta
 
         self._transfer_function_jacobian = self._transfer_function.copy();
 
-        self._transfer_function_jacobian[StateMember.x:StateMember.z+1,
-                                         StateMember.roll:StateMember.yaw+1] = [
-                [dF0dr, dF0dp, dF0dy],
-                [dF1dr, dF1dp, dF1dy],
-                [dF2dr, dF2dp, dF2dy]]
-        self._transfer_function_jacobian[StateMember.roll:StateMember.yaw+1,
-                                         StateMember.roll:StateMember.yaw+1] = [
-                [dF6dr, dF6dp, dF6dy],
-                [dF7dr, dF7dp, dF7dy],
-                [dF8dr, dF8dp, dF8dy]]
+        # self._transfer_function_jacobian[StateMember.x:StateMember.z+1,
+        #                                  StateMember.roll:StateMember.yaw+1] = [
+        #         [dF0dr, dF0dp, dF0dy],
+        #         [dF1dr, dF1dp, dF1dy],
+        #         [dF2dr, dF2dp, dF2dy]]
+        # self._transfer_function_jacobian[StateMember.roll:StateMember.yaw+1,
+        #                                  StateMember.roll:StateMember.yaw+1] = [
+        #         [dF6dr, dF6dp, dF6dy],
+        #         [dF7dr, dF7dp, dF7dy],
+        #         [dF8dr, dF8dp, dF8dy]]
+
+        self._transfer_function_jacobian[
+                StateMember.x:StateMember.z+1,
+                StateMember.roll:StateMember.roll+1] += r_dr.dot(linear_mult)
+        self._transfer_function_jacobian[
+                StateMember.x:StateMember.z+1,
+                StateMember.pitch:StateMember.pitch+1] += r_dp.dot(linear_mult)
+        self._transfer_function_jacobian[
+                StateMember.x:StateMember.z+1,
+                StateMember.yaw:StateMember.yaw+1] += r_dy.dot(linear_mult)
+
+        self._transfer_function_jacobian[
+                StateMember.roll:StateMember.yaw+1,
+                StateMember.roll:StateMember.roll+1] += r_dr.dot(angular_mult)
+        self._transfer_function_jacobian[
+                StateMember.roll:StateMember.yaw+1,
+                StateMember.pitch:StateMember.pitch+1] += r_dp.dot(angular_mult)
+        self._transfer_function_jacobian[
+                StateMember.roll:StateMember.yaw+1,
+                StateMember.yaw:StateMember.yaw+1] += r_dy.dot(angular_mult)
 
         self.state = self._transfer_function.dot(self.state)
         self._wrapStateAngles(
