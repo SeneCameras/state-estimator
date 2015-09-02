@@ -31,7 +31,6 @@ class Ekf(localization.filters.base.FilterBase):
                 [update_size, self.state.shape[0]]) # H
         kalman_gain_subset = numpy.zeros(
                 [self.state.shape[0], update_size]) # K
-        innovation_subset = numpy.zeros([update_size, 1]) # z - Hx
 
         for idx, iui in enumerate(update_indices):
             measurement_subset[idx] = measurement.measurement[iui]
@@ -52,7 +51,7 @@ class Ekf(localization.filters.base.FilterBase):
         hphr_inv  = numpy.linalg.inv(state_to_measurement_subset.dot(pht) +
                 measurement_covariance_subset)
         kalman_gain_subset = pht.dot(hphr_inv)
-        innovation_subset = measurement_subset - state_subset
+        innovation_subset = measurement_subset - state_subset # z - Hx
 
         if self.checkMahalanobisThreshold(
                 innovation_subset, hphr_inv, measurement.mahalanobis_threshold):
@@ -61,7 +60,7 @@ class Ekf(localization.filters.base.FilterBase):
                     innovation_subset[idx] = clampRotation(
                             innovation_subset[idx])
             self.state += kalman_gain_subset.dot(innovation_subset)
-            gain_residual = self._identity
+            gain_residual = numpy.identity(self.state.shape[0])
             gain_residual -= kalman_gain_subset.dot(state_to_measurement_subset)
             self.estimate_error_covariance = gain_residual.dot(
                     self.estimate_error_covariance).dot(

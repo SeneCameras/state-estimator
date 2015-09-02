@@ -20,7 +20,6 @@ class FilterBase(object):
                 0.05, 0.05, 0.06, 0.03, 0.03, 0.06, 0.025, 0.025, 0.04,
                 0.01, 0.01, 0.02, 0.01, 0.01, 0.015
         ])
-        self._identity = numpy.identity(state_size)
         self._initialized = False
         self.sensor_timeout = 0.001 # Assume 100 Hz sensor data
         self.last_update_time = 0
