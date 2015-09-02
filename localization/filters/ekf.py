@@ -80,13 +80,6 @@ class Ekf(localization.filters.base.FilterBase):
         accel = self.state[StateMember.a_x:StateMember.a_z+1]
         angular_vel = self.state[StateMember.v_roll:StateMember.v_yaw+1]
 
-        cr = math.cos(roll)
-        cp = math.cos(pitch)
-        cy = math.cos(yaw)
-        sr = math.sin(roll)
-        sp = math.sin(pitch)
-        sy = math.sin(yaw)
-
         i_delta = delta * delta * 0.5
         rot, r_dr, r_dp, r_dy = rpyToRotationMatrixAndDerivatives(
                 roll, pitch, yaw)
