@@ -59,7 +59,7 @@ if __name__ == '__main__':
             rotation_velocity, rotation_T, delta_time, rotation_steps)
     response_left = firstOrderStepResponse(
             -rotation_velocity, rotation_T, delta_time, rotation_steps)
-    oscillation_speeds = (response_right + response_left) * 25
+    oscillation_speeds = (response_right + response_left) * oscillations
     traj_oscillation = [[[0.] * 3, [0., 0., v]] for v in oscillation_speeds]
 
     trajectories = {
