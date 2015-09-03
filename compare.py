@@ -2,6 +2,7 @@
 
 import math
 import numpy
+import pickle
 
 import localization.simulator
 
@@ -89,3 +90,6 @@ if __name__ == '__main__':
                 for _ in xrange(case_attempts)]
 
         responses.append(attempts)
+
+    with open('comparedata.data', 'w') as f:
+        pickle.dump(responses, f)
