@@ -55,3 +55,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Output data
+*.png
+*.eps
+*.data
