@@ -3,13 +3,30 @@ import numpy
 
 
 class Ahrs(object):
-    """docstring for AHRS"""
+    """Base class for AHRS.
+
+    Parameters
+    ----------
+    frequency: float
+        Number of performed updates per second.
+
+    Attributes
+    ----------
+    frequency
+    """
     def __init__(self, frequency):
         super(Ahrs, self).__init__()
         self.q = numpy.array([1., 0., 0., 0.]).reshape([4, 1])
         self.frequency = frequency
 
     def getRPY(self):
+        """Get RPY angles based on the current quaternion.
+
+        Returns
+        -------
+        numpy.ndarray
+            The roll, pitch and yaw, respectively, in a 3x1 array.
+        """
         w, x, y, z = self.q.reshape(4).tolist()
         # source: https://goo.gl/gvEZnt
         return numpy.array([[
@@ -21,15 +38,50 @@ class Ahrs(object):
             ]])
 
     def update(self, g, a):
+        """Update attitude and heading based on measurements.
+
+        Not implemented in base class.
+
+        Parameters
+        ----------
+        g: numpy.ndarray
+            Angular velocity read by a gyroscope. Size 3x1.
+        a: numpy.ndarray
+            Linear acceleration read by an accelerometer. Size 3x1.
+        """
         raise NotImplementedError("Please Implement this method")
 
 
 class Madgwick(Ahrs):
+    """Madgwick AHRS.
+
+    Parameters
+    ----------
+    frequency: float
+        Number of performed updates per second.
+
+    Attributes
+    ----------
+    frequency
+    beta: float
+        Weight of correction caused by the gravity reading.
+    """
     def __init__(self, frequency):
         super(Madgwick, self).__init__(frequency)
         self.beta = 0.1
 
     def update(self, g, a):
+        """Update attitude and heading based on measurements.
+
+        Use the Madgwick esimation to achieve this.
+
+        Parameters
+        ----------
+        g: numpy.ndarray
+            Angular velocity read by a gyroscope. Size 3x1.
+        a: numpy.ndarray
+            Linear acceleration read by an accelerometer. Size 3x1.
+        """
         q_dot = numpy.array([[
                 0., -g[0, 0], -g[1, 0], -g[2, 0]
             ], [
@@ -67,6 +119,23 @@ class Madgwick(Ahrs):
 
 
 class Mahony(Ahrs):
+    """Mahony AHRS.
+
+    Parameters
+    ----------
+    frequency: float
+        Number of performed updates per second.
+
+    Attributes
+    ----------
+    frequency
+    int_fb : numpy.ndarray
+        A 3x1 array storage for the integral component.
+    ki2: float
+        Integral regulator component, doubled.
+    kp2: float
+        Proportional regulator component, doubled.
+    """
     def __init__(self, frequency):
         super(Madgwick, self).__init__(frequency)
         self.int_fb = numpy.zeros([3, 1])
@@ -74,6 +143,17 @@ class Mahony(Ahrs):
         self.kp2 = 2. * 0.5
 
     def update(self, g, a):
+        """Update attitude and heading based on measurements.
+
+        Use the Mahony esimation to achieve this.
+
+        Parameters
+        ----------
+        g: numpy.ndarray
+            Angular velocity read by a gyroscope. Size 3x1.
+        a: numpy.ndarray
+            Linear acceleration read by an accelerometer. Size 3x1.
+        """
         gyr = g.copy()
         if numpy.count_nonzero(a) > 0:
             acc = a / numpy.linalg.norm(a, 2)
