@@ -16,7 +16,7 @@ class FilterDerived(localization.filters.base.FilterBase):
                 self.val, measurement.time - self.last_measurement_time)
         self.test_instance.assertEqual(15, len(measurement.update_vector))
         self.test_instance.assertSequenceEqual(
-                [True] * 15, measurement.update_vector)
+                range(15), measurement.update_vector)
 
     def predict(self, delta):
         self.val = delta
@@ -35,7 +35,7 @@ class TestFilterBase(unittest.TestCase):
                 [[0.1 * i * j for j in xrange(15)] for i in xrange(15)])
 
         meas = localization.util.Measurement(
-                1000., measurement, measurement_covariance, [True] * 15)
+                1000., measurement, measurement_covariance, range(15))
 
         self.assertFalse(derived.isInitialized())
 
@@ -59,11 +59,11 @@ class TestFilterBase(unittest.TestCase):
                 [[0.1 * i * j for j in xrange(15)] for i in xrange(15)])
 
         derived.enqueueMeasurement(localization.util.Measurement(
-                1002., measurement * 2.0, measurement_covariance, [True] * 15))
+                1002., measurement * 2.0, measurement_covariance, range(15)))
         derived.enqueueMeasurement(localization.util.Measurement(
-                1005., measurement * 3.0, measurement_covariance, [True] * 15))
+                1005., measurement * 3.0, measurement_covariance, range(15)))
         derived.enqueueMeasurement(localization.util.Measurement(
-                1000., measurement * 4.0, measurement_covariance, [True] * 15))
+                1000., measurement * 4.0, measurement_covariance, range(15)))
 
         self.assertFalse(derived.isInitialized())
 

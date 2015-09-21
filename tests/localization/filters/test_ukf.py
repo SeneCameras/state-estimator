@@ -12,7 +12,7 @@ class TestUkf(unittest.TestCase):
         ekf.estimate_error_covariance = initial_covariance.copy()
         measurement = numpy.array([[0.15 * i] for i in xrange(15)])
         measurement_covariance = numpy.identity(15) * 1e-9
-        update_vector = [True] * 15
+        update_vector = range(15)
         meas = localization.util.Measurement(
                 1000., measurement, measurement_covariance, update_vector)
         ekf.processMeasurement(meas)

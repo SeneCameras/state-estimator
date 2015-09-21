@@ -6,10 +6,7 @@ class SensorBase(object):
         self.covariance = covariance
         self.next_measurement_time = start_time
         self.delta_time = delta_time
-        self.measured_values = measured_values
-        self.update_vector = [False] * state_size
-        for i in measured_values:
-            self.update_vector[i] = True
+        self.update_vector = measured_values
 
     def getStateMeasurementsUntil(self, real_state, end_time):
         if self.next_measurement_time > end_time:

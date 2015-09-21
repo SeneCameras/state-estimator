@@ -51,13 +51,11 @@ class FilterBase(object):
                 self._predicted_state = self.state
             self.correct(measurement)
         else:
-            for idx, cond in enumerate(measurement.update_vector):
-                if cond:
-                    self.state[idx] = measurement.measurement[idx]
-                    for idy, cond2 in enumerate(measurement.update_vector):
-                        if cond2:
-                            self.estimate_error_covariance[idx, idy] = (
-                                    measurement.covariance[idx, idy])
+            for idx_1, param_1 in enumerate(measurement.update_vector):
+                self.state[param_1] = measurement.measurement[idx_1]
+                for idx_2, param_2 in enumerate(measurement.update_vector):
+                    self.estimate_error_covariance[idx_1, idx_2] = (
+                            measurement.covariance[idx_1, idx_2])
             self.__initialize()
         if delta >= 0.0:
             self.last_measurement_time = measurement.time

@@ -15,8 +15,7 @@ class InvensenseMPU9250(localization.sensors.base.SensorBase):
         npsd_gyro = 0.01 * deg_to_rad
         npsd_accel = 300e-6 * g
 
-        covariance = numpy.diag(
-                [0.] * 9 + [npsd_gyro] * 3 + [npsd_accel] * 3) * frequency
+        covariance = numpy.diag([npsd_gyro] * 3 + [npsd_accel] * 3) * frequency
         super(InvensenseMPU9250, self).__init__(
                 start_time, 1. / frequency, covariance,
                 [StateMember.v_roll, StateMember.v_pitch, StateMember.v_yaw,
@@ -24,7 +23,8 @@ class InvensenseMPU9250(localization.sensors.base.SensorBase):
 
     def generateMeasurement(self, real_state):
         # Initial model, without the gravity vector taken into account
-        meas = numpy.asarray(real_state).reshape(15)
+        meas = numpy.asarray(
+                real_state[StateMember.v_roll:StateMember.a_z+1]).reshape(6)
         meas = numpy.random.multivariate_normal(meas, self.covariance)
-        meas = numpy.asarray(meas).reshape([15, 1])
+        meas = numpy.asarray(meas).reshape([6, 1])
         return Measurement(0., meas, self.covariance, self.update_vector)

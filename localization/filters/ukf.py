@@ -66,16 +66,7 @@ class Ukf(localization.filters.base.FilterBase):
         if not self._uncorrected:
             self.__setSigmaPoints()
 
-        update_indices = []
-        for idx, cond in enumerate(measurement.update_vector):
-            if not cond:
-                continue
-            measure = measurement.measurement[idx, 0]
-            if math.isnan(measure) or math.isinf(measure):
-                continue
-            update_indices.append(idx)
-
-        update_size = len(update_indices)
+        update_size = len(measurement.update_vector)
 
         state_subset = numpy.zeros([update_size, 1]) # x
         measurement_subset = numpy.zeros([update_size, 1]) # z
@@ -93,12 +84,12 @@ class Ukf(localization.filters.base.FilterBase):
         sigma_point_measurements = [numpy.zeros([update_size, 1])
                 for _ in xrange(len(self._sigma_points))]
 
-        for idx, iui in enumerate(update_indices):
-            measurement_subset[idx] = measurement.measurement[iui]
+        for idx in xrange(update_size):
+            measurement_subset[idx] = measurement.measurement[idx]
             state_subset[idx] = self.state[iui]
-            for jdx, jui in enumerate(update_indices):
+            for jdx in xrange(update_size):
                 measurement_covariance_subset[idx, jdx] = (
-                        measurement.covariance[iui, jui])
+                        measurement.covariance[idx, jdx])
             if measurement_covariance_subset[idx, idx] < 0.0:
                 measurement_covariance_subset[idx, idx] = math.fabs(
                         measurement_covariance_subset[idx, idx])
