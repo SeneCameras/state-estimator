@@ -33,8 +33,6 @@ class FilterBase(object):
                 0.01, 0.01, 0.02, 0.01, 0.01, 0.015
         ])
         self._initialized = False
-        self.sensor_timeout = 0.001 # Assume 100 Hz sensor data
-        self.last_update_time = 0
         self.last_measurement_time = 0
 
         self._measurement_queue = Queue.PriorityQueue()
