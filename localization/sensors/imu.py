@@ -6,6 +6,19 @@ from localization.util import Measurement, StateMember
 
 
 class InvensenseMPU9250(localization.sensors.base.SensorBase):
+    """Simulator for the Invensense MPU 9250
+
+    A 6-DOF sensor for angular velocity and linear acceleration.
+
+    All covariances are set based on the sensor's datasheet.
+
+    Parameters
+    ----------
+    start_time: float
+        Start time of the sensor usage, in seconds. Preferably set to 0.
+    frequency: float
+        Frequency of sensor responses, in Hz.
+    """
     def __init__(self, start_time, frequency):
         delta_time = 1. / frequency
 
@@ -22,7 +35,20 @@ class InvensenseMPU9250(localization.sensors.base.SensorBase):
                  StateMember.a_x, StateMember.a_y, StateMember.a_z])
 
     def generateMeasurement(self, real_state):
-        # Initial model, without the gravity vector taken into account
+        """Generate an IMU measurement based on the given state.
+
+        Gravity is not added yet to this measurement.
+
+        Parameters
+        ----------
+        real_state: numpy.ndarray
+            A 15x1 array representing the actual state.
+
+        Returns
+        -------
+        localization.util.Measurement
+            Generate a measurement with added offsets, errors and noises.
+        """
         meas = numpy.asarray(
                 real_state[StateMember.v_roll:StateMember.a_z+1]).reshape(6)
         meas = numpy.random.multivariate_normal(meas, self.covariance)
