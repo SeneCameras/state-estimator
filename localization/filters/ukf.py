@@ -6,7 +6,15 @@ from localization.util import clampRotation, StateMember, rpyToRotationMatrix
 
 
 class Ukf(localization.filters.base.FilterBase):
-    """Implementation of the Extended Kalman Filter"""
+    """Sensor fusion using Unscented Kalman Filters.
+
+    Parameters
+    ----------
+    alpha: float (default: 0.001)
+    kappa: float (default: 0.0)
+    beta: float (default: 2.)
+        Parameters controlling particle spread. Defaults are Gaussian.
+    """
     def __init__(self, alpha=None, kappa=None, beta=None):
         super(Ukf, self).__init__()
         if alpha is None:
@@ -63,6 +71,18 @@ class Ukf(localization.filters.base.FilterBase):
                             self.state - self._weighted_covar_sqrt[:, i:i+1]))
 
     def correct(self, measurement):
+        """Correct the state estimate and covariance matrix.
+
+        The particle positions are averaged to estimate a new state.
+        The covariance is estimated via the positions between particles.
+
+        State estimates are fused, while covariances are accumulated.
+
+        Parameters
+        ----------
+        measurement: localization.util.Measurement
+            Measured value used to correct the state prediction.
+        """
         if not self._uncorrected:
             self.__setSigmaPoints()
 
@@ -135,6 +155,15 @@ class Ukf(localization.filters.base.FilterBase):
             self._uncorrected = False
 
     def predict(self, delta):
+        """Predict the particle state estimates after a certain delay.
+
+        The particle positions are estimated using the transfer function.
+
+        Parameters
+        ----------
+        delta: float
+            Time in seconds since the last measurement.
+        """
         orientation = self.state[StateMember.roll:StateMember.yaw+1]
         roll, pitch, yaw = orientation.reshape(3)
 

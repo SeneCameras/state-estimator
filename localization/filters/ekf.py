@@ -7,11 +7,20 @@ from localization.util import rpyToRotationMatrixAndDerivatives
 
 
 class Ekf(localization.filters.base.FilterBase):
-    """Implementation of the Extended Kalman Filter"""
+    """Sensor fusion using Extended Kalman Filters."""
     def __init__(self):
         super(Ekf, self).__init__()
 
     def correct(self, measurement):
+        """Correct the state estimate and covariance matrix.
+
+        State estimates are fused, while covariances are accumulated.
+
+        Parameters
+        ----------
+        measurement: localization.util.Measurement
+            Measured value used to correct the state prediction.
+        """
         update_size = len(measurement.update_vector)
 
         state_subset = numpy.zeros([update_size, 1]) # x
@@ -63,6 +72,16 @@ class Ekf(localization.filters.base.FilterBase):
                     StateMember.roll, StateMember.pitch, StateMember.yaw)
 
     def predict(self, delta):
+        """Predict the mean and covariance estimate after a certain delay.
+
+        The mean is predicted using the transfer function.
+        The covariance is predicted using the Jacobian.
+
+        Parameters
+        ----------
+        delta: float
+            Time in seconds since the last measurement.
+        """
         orientation = self.state[StateMember.roll:StateMember.yaw+1]
         roll, pitch, yaw = orientation.reshape(3)
 
