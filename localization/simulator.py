@@ -8,6 +8,25 @@ import localization.sensors.vision
 
 
 def getSimulationUsecase(filter_name, vision_freq, vision_covariance_diagonal):
+    """Generate a setup of filters and vision quality for a simulation.
+
+    Parameters
+    ----------
+    filter_name: {'EKF, UKF'}
+        Choice of either using Extended or Unscented Kalman Filters.
+    vision_freq: float
+        Frequency at which the vision system gives measurements.
+    vision_covariance_diagonal: list-like
+        Variance along each axis, listed as: forwards, sideways, vertical
+
+    Returns
+    -------
+    Simulator
+        Simulator containing:
+        * EKF/UKF sensor fusion
+        * 4kHz InvensenseMPU9250 6DOF IMU
+        * A vision system estimation defined by the given parameters
+    """
     if filter_name is 'EKF':
         filtering = localization.filters.ekf.Ekf()
     elif filter_name is 'UKF':
@@ -22,7 +41,32 @@ def getSimulationUsecase(filter_name, vision_freq, vision_covariance_diagonal):
 
 
 class Simulator(object):
-    """Simulator for the desired scenario."""
+    """Simulation of sensor fusion.
+
+    Simulates sensor fusion using a filter and multiple sensors.
+
+    Parameters
+    ----------
+    filtering: localization.filters.base.FilterBase
+        A sensor fusion filter, used to estimate state.
+    sensors: list(localization.sensors.base.SensorBase)
+        A list of sensor simulators, used to estimate state.
+
+    Attributes
+    ----------
+    filtering
+    sensors
+    delta_time: float
+        Interval of one time tick. Default is the smallest sensor interval.
+    next_tick: float
+        Time at which the next sensor tick will occur.
+    p: numpy.ndarray
+        A 3x1 array representing the current position base truth.
+    phi: numpy.ndarray
+        A 3x1 array representing the current orientation RPY base truth.
+    v: numpy.ndarray
+        A 3x1 array representing the current linear velocity base truth.
+    """
     def __init__(self, filtering, sensors):
         super(Simulator, self).__init__()
         self.filtering = filtering
@@ -36,6 +80,18 @@ class Simulator(object):
         self.v = numpy.zeros([3, 1])
 
     def tick(self, v, w):
+        """Tick simulation by the set time interval.
+
+        The simulation tick receives the current linear and angular velocity.
+
+        Parameters
+        ----------
+        v: numpy.ndarray
+            A 3x1 array representing the new linear velocity.
+        w: numpy.ndarray
+            A 3x1 array representing the new angular velocity.
+        """
+
         v = numpy.asarray(v).reshape([3, 1])
         w = numpy.asarray(w).reshape([3, 1])
         a = (v - self.v) / self.delta_time
@@ -60,6 +116,13 @@ class Simulator(object):
         self.next_tick += self.delta_time
 
     def getFrameBaseTruth(self):
+        """Get the base truth of the current frame.
+
+        Returns
+        -------
+        dict(numpy.ndarray)
+            A dict with 3 3x1 arrays for 'position', 'rpy' and 'velocity'.
+        """
         return {
             'position': self.p.copy(),
             'rpy': self.phi.copy(),
@@ -67,6 +130,13 @@ class Simulator(object):
         }
 
     def getFrameEstimate(self):
+        """Get sensor fusion estimate of the current frame.
+
+        Returns
+        -------
+        dict(numpy.ndarray)
+            A dict with 3 3x1 arrays for 'position', 'rpy' and 'velocity'.
+        """
         return {
             'position': self.filtering.state[0:3, 0:1],
             'rpy': self.filtering.state[3:6, 0:1],
