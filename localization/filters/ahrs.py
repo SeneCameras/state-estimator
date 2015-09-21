@@ -137,7 +137,7 @@ class Mahony(Ahrs):
         Proportional regulator component, doubled.
     """
     def __init__(self, frequency):
-        super(Madgwick, self).__init__(frequency)
+        super(Mahony, self).__init__(frequency)
         self.int_fb = numpy.zeros([3, 1])
         self.ki2 = 2. * 0.
         self.kp2 = 2. * 0.5
