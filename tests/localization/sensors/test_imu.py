@@ -1,8 +1,42 @@
 import numpy
 import unittest
+import math
 
 import localization.sensors.imu
 import localization.util
+
+
+class TestUtilities(unittest.TestCase):
+    def test_z_axis_rotation(self):
+        phi = 0.8
+        cos_phi_half = math.cos(phi / 2.)
+        sin_phi_half = math.sin(phi / 2.)
+        cos_phi = math.cos(phi)
+        sin_phi = math.sin(phi)
+
+        # Rotate z axis around z axis
+        result = localization.sensors.imu.rotateZAxisByQuaternion(
+                [cos_phi_half, 0., 0., sin_phi_half])
+        self.assertSequenceEqual([3, 1], result.shape)
+        self.assertAlmostEqual(0., result[0, 0])
+        self.assertAlmostEqual(0., result[1, 0])
+        self.assertAlmostEqual(1., result[2, 0])
+
+        # Rotate z axis around x axis
+        result = localization.sensors.imu.rotateZAxisByQuaternion(
+                [cos_phi_half, sin_phi_half, 0., 0.])
+        self.assertSequenceEqual([3, 1], result.shape)
+        self.assertAlmostEqual(0., result[0, 0])
+        self.assertAlmostEqual(-sin_phi, result[1, 0])
+        self.assertAlmostEqual(cos_phi, result[2, 0])
+
+        # Rotate z axis around y axis
+        result = localization.sensors.imu.rotateZAxisByQuaternion(
+                [cos_phi_half, 0., sin_phi_half, 0.])
+        self.assertSequenceEqual([3, 1], result.shape)
+        self.assertAlmostEqual(sin_phi, result[0, 0])
+        self.assertAlmostEqual(0., result[1, 0])
+        self.assertAlmostEqual(cos_phi, result[2, 0])
 
 
 class TestImu(unittest.TestCase):
