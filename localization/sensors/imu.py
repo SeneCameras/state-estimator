@@ -6,7 +6,7 @@ from localization.util import Measurement, StateMember, rpyToRotationMatrix
 
 
 class InvensenseMPU9250(localization.sensors.base.SensorBase):
-    """Simulator for the Invensense MPU 9250
+    """Simulator for the Invensense MPU 9250.
 
     A 6-DOF sensor for angular velocity and linear acceleration.
 
