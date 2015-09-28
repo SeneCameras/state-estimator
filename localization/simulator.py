@@ -4,7 +4,7 @@ import localization.util
 import localization.filters.ekf
 import localization.filters.ukf
 import localization.sensors.imu
-import localization.sensors.vision
+import localization.sensors.visionapprox
 
 
 def getSimulationUsecase(filter_name, vision_freq, vision_covariance_diagonal):
@@ -36,7 +36,8 @@ def getSimulationUsecase(filter_name, vision_freq, vision_covariance_diagonal):
     vision_covariance = numpy.diag(vision_covariance_diagonal)
     sensors = [
         localization.sensors.imu.InvensenseMPU9250(0., 4000.),
-        localization.sensors.vision.Vision(0., vision_freq, vision_covariance)]
+        localization.sensors.visionapprox.Vision(
+                0., vision_freq, vision_covariance)]
     return Simulator(filtering, sensors)
 
 
