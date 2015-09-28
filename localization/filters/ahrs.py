@@ -112,7 +112,8 @@ class Madgwick(Ahrs):
 
             step = j.T.dot(f)
 
-            q_dot -= step * (self.beta / numpy.linalg.norm(step, 2))
+            if numpy.linalg.norm(step, 2) != 0.:
+                q_dot -= step * (self.beta / numpy.linalg.norm(step, 2))
 
         self.q += q_dot / self.frequency
         self.q /= numpy.linalg.norm(self.q, 2)
