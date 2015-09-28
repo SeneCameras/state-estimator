@@ -90,8 +90,8 @@ class ImuCompensated(localization.sensors.base.SensorBase):
             raise ValueError('AHRS name must be either "Madgwick" or "Mahony"')
         self.sensor = InvensenseMPU9250(
                 start_time, frequency, gyro_drift, gravity_drift)
-        self.setGyroCompensation(0., 0., 0.)
-        self.setGravity(0.)
+        self.setGyroCompensation(*numpy.array(gyro_drift).flatten())
+        self.setGravity(gravity_drift)
         self.setGravityCorrectionRate(0.)
 
         super(ImuCompensated, self).__init__(
