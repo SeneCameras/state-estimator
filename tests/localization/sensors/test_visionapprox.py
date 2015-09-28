@@ -1,21 +1,21 @@
 import numpy
 import unittest
 
-import localization.sensors.vision
+import localization.sensors.visionapprox
 import localization.util
 
 
 class TestVision(unittest.TestCase):
     def test_constructor(self):
         # Set a zero covariance matrix to make tests deterministic
-        vision = localization.sensors.vision.Vision(
+        vision = localization.sensors.visionapprox.Vision(
                 10., 0.5, numpy.zeros([3, 3]))
         self.assertSequenceEqual([6, 7, 8], vision.update_vector)
         self.assertAlmostEqual(10., vision.next_measurement_time)
         self.assertAlmostEqual(2., vision.delta_time)
 
     def test_get_state_measurements_until(self):
-        vision = localization.sensors.vision.Vision(
+        vision = localization.sensors.visionapprox.Vision(
                 10., 0.5, numpy.zeros([3, 3]))
         self.assertAlmostEqual(10., vision.next_measurement_time)
 
