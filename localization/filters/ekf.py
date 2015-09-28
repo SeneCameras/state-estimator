@@ -34,7 +34,7 @@ class Ekf(localization.filters.base.FilterBase):
 
         for idx in xrange(update_size):
             measurement_subset[idx] = measurement.measurement[idx]
-            state_subset[idx] = self.state[iui]
+            state_subset[idx] = self.state[measurement.update_vector[idx]]
             for jdx in xrange(update_size):
                 measurement_covariance_subset[idx, jdx] = (
                         measurement.covariance[idx, jdx])
@@ -44,7 +44,7 @@ class Ekf(localization.filters.base.FilterBase):
             if measurement_covariance_subset[idx, idx] < 1e-9:
                 measurement_covariance_subset[idx, idx] = 1e-9
 
-        for idx, iui in enumerate(update_indices):
+        for idx, iui in enumerate(measurement.update_vector):
             state_to_measurement_subset[idx, iui] = 1.0
 
         pht = self.estimate_error_covariance.dot(state_to_measurement_subset.T)
@@ -55,7 +55,7 @@ class Ekf(localization.filters.base.FilterBase):
 
         if self.checkMahalanobisThreshold(
                 innovation_subset, hphr_inv, measurement.mahalanobis_threshold):
-            for idx, iui in enumerate(update_indices):
+            for idx, iui in enumerate(measurement.update_vector):
                 if iui >= StateMember.roll and iui <= StateMember.yaw:
                     innovation_subset[idx] = clampRotation(
                             innovation_subset[idx])

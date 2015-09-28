@@ -106,7 +106,7 @@ class Ukf(localization.filters.base.FilterBase):
 
         for idx in xrange(update_size):
             measurement_subset[idx] = measurement.measurement[idx]
-            state_subset[idx] = self.state[iui]
+            state_subset[idx] = self.state[measurement.update_vector[idx]]
             for jdx in xrange(update_size):
                 measurement_covariance_subset[idx, jdx] = (
                         measurement.covariance[idx, jdx])
@@ -116,7 +116,7 @@ class Ukf(localization.filters.base.FilterBase):
             if measurement_covariance_subset[idx, idx] < 1e-9:
                 measurement_covariance_subset[idx, idx] = 1e-9
 
-        for idx, iui in enumerate(update_indices):
+        for idx, iui in enumerate(measurement.update_vector):
             state_to_measurement_subset[idx, iui] = 1.0
 
         for idx in xrange(len(self._sigma_points)):
@@ -140,7 +140,7 @@ class Ukf(localization.filters.base.FilterBase):
         if self.checkMahalanobisThreshold(
                 innovation_subset, inv_innov_cov,
                 measurement.mahalanobis_threshold):
-            for idx, iui in enumerate(update_indices):
+            for idx, iui in enumerate(measurement.update_vector):
                 if iui >= StateMember.roll and iui <= StateMember.yaw:
                     innovation_subset[idx] = clampRotation(
                             innovation_subset[idx])
