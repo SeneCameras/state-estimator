@@ -9,7 +9,7 @@ from localization.util import Measurement, StateMember, rpyToRotationMatrix
 def rotateZAxisByQuaternion(q):
     """Get vector representing Z axis rotated by given quaternion.
 
-    Calculated via p*.v.p formula.
+    Calculated via p.v.p* formula.
 
     Parameters
     ----------
@@ -23,8 +23,8 @@ def rotateZAxisByQuaternion(q):
     """
     a, b, c, d = q
     return numpy.array([
-        [2. * (b * d + a * c)],
-        [2. * (c * d - a * b)],
+        [2. * (b * d - a * c)],
+        [2. * (c * d + a * b)],
         [a**2 - b**2 - c**2 + d**2]])
 
 
