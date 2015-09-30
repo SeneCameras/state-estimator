@@ -30,7 +30,7 @@ class Vision(localization.sensors.base.SensorBase):
                 [StateMember.v_x, StateMember.v_y, StateMember.v_z])
 
     def generateMeasurement(self, real_state):
-        """Generate an vision measurement based on the given state.
+        """Generate a vision measurement based on the given state.
 
         The measurement depends on the vision parameters we've set.
 
