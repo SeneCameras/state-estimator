@@ -46,6 +46,8 @@ class SensorBase(object):
         if self.next_measurement_time > end_time:
             return None
         retval = self.generateMeasurement(real_state)
+        if retval is None:
+            return None
         retval.time = self.next_measurement_time
         self.next_measurement_time += self.delta_time
         if self.next_measurement_time <= end_time:
@@ -67,5 +69,7 @@ class SensorBase(object):
         -------
         localization.util.Measurement
             Generate a measurement with added offsets, errors and noises.
+        None
+            In case that a measurement fails to get generated.
         """
         raise NotImplementedError("Please Implement this method")
