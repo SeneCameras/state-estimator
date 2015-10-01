@@ -1,8 +1,9 @@
+import cv2
 import numpy
 import random
 
 import localization.sensors.base
-from localization.util import Measurement, StateMember
+from localization.util import Measurement, StateMember, rpyToRotationMatrix
 
 
 def projectToPlane(points):
@@ -127,6 +128,54 @@ class FeatureGenerator(object):
         """
         p = self.getVisiblePoints(position, rotation, fov)
         return random.sample(p, int(len(p) * percentage))
+
+
+def matchFlann(points_a, points_b, translation, rotation):
+    """Match two sets of points based on a transformation.
+
+    Given a set of old points A, and a set of new points B, transform the
+    old points with the given translation and rotation, and retrieve which
+    points match with eachother.
+    Matches are accepted if the closest point is 30 percent closer than the
+    second closest point.
+
+    Parameters
+    ----------
+    points_a: list(numpy.ndarray)
+        A list of 3x1 arrays representing old feature coordinates in space.
+    points_b: list(numpy.ndarray)
+        A list of 3x1 arrays representing new feature coordinates in space.
+    translation: numpy.ndarray
+        A 3x1 array representing the translation between states.
+    rotation: numpy.ndarray
+        A 3x3 array representing the rotation between states.
+
+    Returns
+    -------
+    list(tuple(int, int))
+        List of point indices for all matches.
+    """
+    FLANN_INDEX_KDTREE = 0
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=4)
+    search_params = dict(checks=50)
+    points_a = numpy.array([(p + translation).flatten() for p in points_a])
+    points_b = numpy.array([p.flatten() for p in points_b], numpy.float32)
+    points_a = rotation.dot(points_a.T).T.astype(numpy.float32)
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(points_a, points_b, k=2)
+
+    good_matches = {}
+    for i, (m, n) in enumerate(matches):
+        if m.distance < 0.7 * n.distance:
+            accepts = True
+            if m.queryIdx in good_matches:
+                accepts = False
+                if m.distance < good_matches[m.queryIdx].distance:
+                    accepts = True
+            if accepts:
+                good_matches[m.queryIdx] = m
+
+    return [(m.queryIdx, m.trainIdx) for m in good_matches.values()]
 
 
 class Vision(localization.sensors.base.SensorBase):
