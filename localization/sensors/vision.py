@@ -192,11 +192,94 @@ class Vision(localization.sensors.base.SensorBase):
         Start time of the sensor usage, in seconds. Preferably set to 0.
     frequency: float
         Frequency of sensor responses, in Hz.
+    cone_angle_reach: float
+        Describes the field of view of the used cameras.
+        Represents the maximum angle of every visible point, relative to the
+        optical center of the camera.
+    delta_x: float
+        Distance between the left and right camera centers.
+        Each camera is offset by delta_x / 2.
     """
-    def __init__(self, start_time, frequency):
+    def __init__(self, start_time, frequency, cone_angle_reach, delta_x):
         super(Vision, self).__init__(
                 start_time, 1. / frequency, numpy.asarray(covariance),
                 [StateMember.v_x, StateMember.v_y, StateMember.v_z])
+        self.feature_generator = FeatureGenerator()
+        self.fov = cone_angle_reach
+        self.delta_x = delta_x
+        self.v_lin = numpy.zeros([3, 1])
+        self.v_ang = numpy.zeros([3, 1])
+        self.old_points = []
+
+    def retrieveVelocities(self, linear, angular):
+        """Retrieves linear and angular velocities from measuremenets.
+
+        Needs to be called before every generateMeasurement call.
+
+        Parameters
+        ----------
+        linear: numpy.ndarray
+            A 3x1 array representing the linear velocity.
+        angular: numpy.ndarray
+            A 3x1 array representing the angular velocity.
+        """
+        self.v_lin = linear.copy()
+        self.v_ang = angular.copy()
+
+    def _generateFeatureProjections(self, real_state, percentage):
+        """Generates projections of feature points on the camera planes.
+
+        Parameters
+        ----------
+        real_state: numpy.ndarray
+            A 15x1 array representing the actual state.
+        percentage: float
+            The percentage of points, with values inside [0, 1], that are
+            chosen for viewing, from inside the given cone.
+
+        Returns
+        -------
+        (list(numpy.ndarray), list(numpy.ndarray))
+            Tuple of two lists of 2x1 arrays representing coordinates on the
+            camera plane.
+        """
+        position = real_state[StateMember.x:StateMember.z+1]
+        rotation = localization.util.rpyToRotationMatrix(
+                *real_state[StateMember.roll:StateMember.yaw+1, 0])
+        camera_offset = rotation.dot(
+                numpy.array([[0.],[self.delta_x / 2.],[0.]]))
+        view_left = projectToPlane(
+                self.feature_generator.getRandomVisiblePoints(
+                        position - camera_offset, rotation, self.fov,
+                        percentage))
+        view_right = projectToPlane(
+                self.feature_generator.getRandomVisiblePoints(
+                        position + camera_offset, rotation, self.fov,
+                        percentage))
+        return (view_left, view_right)
+
+    def _generateVisibleSpatialPoints(self, real_state, percentage):
+        """Generates visible feature points on the camera planes.
+
+        Parameters
+        ----------
+        real_state: numpy.ndarray
+            A 15x1 array representing the actual state.
+        percentage: float
+            The percentage of points, with values inside [0, 1], that are
+            chosen for viewing, from inside the given cone.
+
+        Returns
+        -------
+        list(numpy.ndarray)
+            List of 3x1 arrays representing coordinates from the camera
+            perspective.
+        """
+        position = real_state[StateMember.x:StateMember.z+1]
+        rotation = localization.util.rpyToRotationMatrix(
+                *real_state[StateMember.roll:StateMember.yaw+1, 0])
+        return self.feature_generator.getRandomVisiblePoints(
+                position, rotation, self.fov, percentage)
 
     def generateMeasurement(self, real_state):
         """Generate a vision measurement based on the given state.
@@ -210,5 +293,19 @@ class Vision(localization.sensors.base.SensorBase):
         -------
         localization.util.Measurement
             Generate a measurement based on images and changes.
+        None
+            In case that a measurement fails to get generated.
         """
+        view_points = self._generateVisibleSpatialPoints(real_state, 0.9)
+        if len(self.view_points) == 0 or len(self.old_points) == 0:
+            self.old_points = view_points
+            return None
+
+        # Transform all old points by our best transformation guess
+        translation = self.v_lin * self.delta_time
+        rotation = rpyToRotationMatrix(self.v_ang * self.delta_time)
+        matches = matchFlann(
+                view_points, self.old_points, translation, rotation)
+
+        self.old_points = view_points
         raise NotImplementedError("Please Implement this method")
