@@ -39,29 +39,48 @@ class FeatureGenerator(object):
     ----------
     distance_standard_deviation: float, optional
         Standard deviation of feature point poisitons around the world center.
-        Default is 50.0.
+        Default is 10.0.
     point_count: int, optional
         Number of points generated in the world.
         Default is 1000.
+    minimum_distance: float, optional
+        Minimum distance of feature point from the world center.
+        Default is 1.5.
 
     Attributes
     ----------
     points: list(numpy.ndarray)
         A list of length 3 arrays containing coordinates of all features.
     """
-    def __init__(self, distance_standard_deviation = None, point_count = None):
+    def __init__(self, distance_standard_deviation = None, point_count = None,
+                 minimum_distance = None):
         super(FeatureGenerator, self).__init__()
 
         if distance_standard_deviation is None:
-            distance_standard_deviation = 50.
+            distance_standard_deviation = 10.
         if point_count is None:
             point_count = 1000
+        if minimum_distance is None:
+            minimum_distance = 1.5
+        distance_standard_deviation -= minimum_distance
 
-        covariance = numpy.identity(3) * distance_standard_deviation
+        covariance = numpy.identity(3) * (distance_standard_deviation ** 2)
         mean = numpy.zeros(3)
 
-        self.points = [numpy.random.multivariate_normal(mean, covariance)
+        self.points = [self.__generatePoint(mean, covariance, minimum_distance)
                 for _ in xrange(point_count)]
+
+
+    def __generatePoint(self, mean, covariance, shift_distance):
+        """Generate a point and shift it by the given distance."""
+        p = numpy.random.multivariate_normal(mean, covariance)
+        p_len = numpy.linalg.norm(p)
+        if not p_len > 0.:
+            p[0] = 1.
+            p_len = 1.
+        p += p * (shift_distance / p_len)
+        return p
+
 
     def getVisiblePoints(self, position, rotation, fov):
         """Get a list of point positions, relative to given view.
