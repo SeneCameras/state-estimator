@@ -35,9 +35,11 @@ def getSimulationUsecase(filter_name, vision_freq, vision_covariance_diagonal):
         raise ValueError('Filter name must be either "EKF" or "UKF"')
     vision_covariance = numpy.diag(vision_covariance_diagonal)
     sensors = [
-        localization.sensors.imu.InvensenseMPU9250(0., 4000.),
+        localization.sensors.imu.ImuCompensated(
+                0., 4000., 'Madgwick', numpy.zeros([3, 1]), 9.8055),
         localization.sensors.visionapprox.Vision(
                 0., vision_freq, vision_covariance)]
+    sensors[0].setGravityCorrectionRate(0.005)
     return Simulator(filtering, sensors)
 
 
