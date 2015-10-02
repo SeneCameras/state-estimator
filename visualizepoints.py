@@ -13,7 +13,7 @@ def main():
     p = np.zeros([3, 1])
     r = np.identity(3)
     ps = []
-    for st, color, marker in [(2., 'red', 'o'), (-2., 'blue', '^')]:
+    for st, color, marker in [(0.02, 'red', 'o'), (-0.02, 'blue', '^')]:
         p[1] = st
         mypoints = fg.getRandomVisiblePoints(p, r, np.pi / 4., 0.8)
         ps.append(mypoints)
@@ -26,9 +26,9 @@ def main():
         y = np.array([q[0] + st for q in mypoints])
         z = np.array([q[1] for q in mypoints])
         ax.scatter(x, y, z, color=color, marker=marker)
-    p[1] = 4.
+    p[1] = 0.04
     matches = matchFlann(ps[0], ps[1], p, np.identity(3))
-    offset = np.array([[0., 0.], [2., -2.], [0., 0.]])
+    offset = np.array([[0., 0.], [0.02, -0.02], [0., 0.]])
     print len(matches), 'matches found!'
     for i1, i2 in matches:
         mypoints = np.array(
